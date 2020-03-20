@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"context"
 	"encoding/json"
-	_ "encoding/json"
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
@@ -63,14 +62,14 @@ func (sw *SlidingWindows) Add(jd *JsonData) {
 
 	key := jd.Ts - (jd.Ts % GRANULARITY)
 
-	if sw.timeAdvance == 0 || jd.Ts > sw.timeAdvance {
+	if jd.Ts > sw.timeAdvance {
 		sw.timeAdvance = jd.Ts
 		// potentially create a new window
 		if sw.windows.Front() == nil || sw.windows.Front().Value.(*Window).Ts < key {
 			sw.windows.PushFront(NewWindow(key))
-			// potentially remove old windows
-			sw.cleanup()
 		}
+		// potentially remove old windows TODO: move it to the if above => gain ~1s BUT more lag in output
+		sw.cleanup()
 	}
 
 	for e := sw.windows.Front(); ; e = e.Next() {
@@ -93,7 +92,7 @@ func (sw *SlidingWindows) Advance() {
 
 func (sw *SlidingWindows) cleanup() {
 	sw.lastCleanup = sw.timeAdvance
-	log.Printf("Trying cleanup\n")
+	//log.Printf("Trying cleanup\n")
 
 	var prev *list.Element
 	for e := sw.windows.Back(); e != nil; e = prev {
@@ -103,6 +102,23 @@ func (sw *SlidingWindows) cleanup() {
 			log.Printf("Closing window %d (cnt: %d, lag: %d)\n", w.Ts, len(w.m), sw.timeAdvance-w.Ts)
 			go w.Close()
 			sw.windows.Remove(e)
+		}
+	}
+}
+
+func process(channel chan []byte) {
+	sw := NewSlidingWindows()
+	var jd JsonData
+
+
+	for {
+		bs := <-channel
+		if bs == nil { // TODO
+			sw.Advance()
+		} else {
+			if err := json.Unmarshal(bs, &jd); err == nil {
+				sw.Add(&jd)
+			}
 		}
 	}
 }
@@ -117,24 +133,31 @@ func main() {
 		MaxBytes:  10e6, // 10MB
 	})
 
-	var jsonData JsonData
-	sw := NewSlidingWindows()
+	channel := make(chan []byte)
+	timeout := (GRANULARITY+MAX_LAG)*time.Second
+
+	go process(channel)
+
+	start := time.Now()
+	log.Println("Start")
 
 	for {
-		ctx, _ := context.WithTimeout(context.Background(), (GRANULARITY+MAX_LAG)*time.Second)
+		ctx, _ := context.WithTimeout(context.Background(), timeout)
 		m, err := r.ReadMessage(ctx)
 		if err != nil {
-			sw.Advance()
-			continue
-		}
-
-		if err := json.Unmarshal(m.Value, &jsonData); err != nil {
-			log.Println(err)
+			// TODO
+			channel <- nil
+			break
 		} else {
-			sw.Add(&jsonData)
+			channel <- m.Value
 		}
-
 	}
 
+	elapsed := time.Now().Sub(start)
+	log.Printf("Elapsed: %s", elapsed)
+	log.Printf("Elapsed-timeout: %sf\n", elapsed.Seconds() - timeout.Seconds())
+
+	// cleanup
+	close(channel)
 	r.Close()
 }
