@@ -68,8 +68,8 @@ func (sw *SlidingWindows) Add(jd *JsonData) {
 		if sw.windows.Front() == nil || sw.windows.Front().Value.(*Window).Ts < key {
 			sw.windows.PushFront(NewWindow(key))
 		}
-		// potentially remove old windows TODO: move it to the if above => gain ~1s BUT more lag in output
-		sw.cleanup()
+		// potentially cleanup windows
+		sw.Cleanup()
 	}
 
 	for e := sw.windows.Front(); ; e = e.Next() {
@@ -87,10 +87,10 @@ func (sw *SlidingWindows) Add(jd *JsonData) {
 
 func (sw *SlidingWindows) Advance() {
 	sw.timeAdvance = int(time.Now().Unix())
-	sw.cleanup()
+	sw.Cleanup()
 }
 
-func (sw *SlidingWindows) cleanup() {
+func (sw *SlidingWindows) Cleanup() {
 	sw.lastCleanup = sw.timeAdvance
 	//log.Printf("Trying cleanup\n")
 
@@ -106,20 +106,56 @@ func (sw *SlidingWindows) cleanup() {
 	}
 }
 
-func process(channel chan []byte) {
+func aggregator(indata chan JsonData, flush chan bool) {
 	sw := NewSlidingWindows()
-	var jd JsonData
 
+	for {
+		select {
+		case ok := <-flush:
+			if !ok {
+				break
+			}
+			sw.Advance()
+		case jd := <-indata:
+			sw.Add(&jd)
+		}
+	}
+}
+
+func dispatcher(channel chan []byte, nWorkers int) {
+
+	workers := make(map[int]chan JsonData)
+	// ticker := time.NewTicker(GRANULARITY)
+	ticker := make(chan bool)
+	uids := make(map[string]int)
+	nextWorker := 0
+
+	// start the workers
+	for i := 0; i < nWorkers; i++ {
+		c := make(chan JsonData)
+		go aggregator(c, ticker)
+		workers[i] = c
+	}
+
+	var jd JsonData
 
 	for {
 		bs := <-channel
-		if bs == nil { // TODO
-			sw.Advance()
-		} else {
-			if err := json.Unmarshal(bs, &jd); err == nil {
-				sw.Add(&jd)
-			}
+		if bs == nil {
+			// timeout
+			ticker <- true
+			continue
 		}
+
+		if err := json.Unmarshal(bs, &jd); err == nil {
+			key := jd.UserId
+			if _, ok := uids[key]; !ok {
+				uids[jd.UserId] = nextWorker
+				nextWorker = (nextWorker + 1) % nWorkers
+			}
+			workers[uids[key]] <- jd
+		}
+
 	}
 }
 
@@ -134,9 +170,9 @@ func main() {
 	})
 
 	channel := make(chan []byte)
-	timeout := (GRANULARITY+MAX_LAG)*time.Second
+	timeout := (GRANULARITY + MAX_LAG) * time.Second
 
-	go process(channel)
+	go dispatcher(channel, 3)
 
 	start := time.Now()
 	log.Println("Start")
@@ -155,7 +191,7 @@ func main() {
 
 	elapsed := time.Now().Sub(start)
 	log.Printf("Elapsed: %s", elapsed)
-	log.Printf("Elapsed-timeout: %sf\n", elapsed.Seconds() - timeout.Seconds())
+	log.Printf("Elapsed-timeout: %sf\n", elapsed.Seconds()-timeout.Seconds())
 
 	// cleanup
 	close(channel)
