@@ -5,13 +5,13 @@ package main
 // or Ring Buffer
 type Ring struct {
 	head, size int
-	buf        []Window
+	buf        []Aggregation
 }
 
 //New creates a new, empty ring buffer.
 func NewRing(capacity int) (b *Ring) {
 	return &Ring{
-		buf:  make([]Window, capacity),
+		buf:  make([]Aggregation, capacity),
 		head: -1,
 	}
 }
@@ -37,7 +37,7 @@ func (b *Ring) Remove(count int) {
 //   Get(size-1) //is the oldest
 //   Get(-1) //is the oldest too
 //
-func (b *Ring) Get(i int) *Window {
+func (b *Ring) Get(i int) *Aggregation {
 	if b.size == 0 {
 		return nil
 	}
@@ -57,13 +57,13 @@ func (b *Ring) Size() int {
 
 //add 'val' at the Ring's head, it also increases its size.
 //If the capacity is exhausted (size == capacity) an error is returned.
-func (b *Ring) Add(ts int) *Window {
+func (b *Ring) Add(timeKey int32) *Aggregation {
 	if b.size >= len(b.buf) {
 		return nil
 	}
 
 	next := Next(1, b.head, len(b.buf))
-	b.buf[next].Reset(ts)
+	b.buf[next].Reset(timeKey)
 	b.head = next
 	b.size++ // increase the inner size
 	return &b.buf[next]
