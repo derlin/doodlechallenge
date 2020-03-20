@@ -1,7 +1,6 @@
 package main
 
 import (
-	"container/list"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,10 +10,12 @@ import (
 )
 
 const (
-	KAFKA_BROKER = "localhost:9092"
-	KAFKA_TOPIC  = "doodle"
-	MAX_LAG      = 5  // in seconds
-	GRANULARITY  = 60 // in seconds
+	KAFKA_BROKER    = "localhost:9092"
+	KAFKA_TOPIC_IN  = "doodle"
+	KAFKA_TOPIC_OUT = "doodle-out"
+	MAX_LAG         = 5  // in seconds
+	GRANULARITY     = 60 // in seconds
+	N_WORKERS       = 1
 )
 
 type JsonData struct {
@@ -27,8 +28,9 @@ type Window struct {
 	m  map[string]int
 }
 
-func NewWindow(ts int) *Window {
-	return &Window{Ts: ts, m: make(map[string]int)}
+func (w *Window) Reset(ts int) {
+	w.Ts = ts
+	w.m = make(map[string]int)
 }
 
 func (w *Window) Add(jd *JsonData) {
@@ -38,23 +40,36 @@ func (w *Window) Add(jd *JsonData) {
 	w.m[jd.UserId] += 1
 }
 
-func (w *Window) Close() {
+func (w *Window) Close(writer *kafka.Writer) {
+	msg := make([]kafka.Message, len(w.m))
+	i := 0
 	for user, cnt := range w.m {
-		_ = fmt.Sprintf("@@ CLOSE %d\t%s\t%d\n", w.Ts, user, cnt)
+		msg[i].Key = []byte(user)
+		msg[i].Value = []byte(fmt.Sprintf(`{"ts": %d, "user":"%s", "cnt": %d}`, w.Ts, user, cnt))
+		i += 1
+	}
+	if err := writer.WriteMessages(context.Background(), msg...); err != nil {
+		log.Panic(err)
 	}
 }
 
 type SlidingWindows struct {
 	timeAdvance    int
 	lastCleanup    int
-	windows        *list.List
+	windows        *Ring
 	maxOpenWindows int
+	writer         *kafka.Writer
 }
 
 func NewSlidingWindows() *SlidingWindows {
 	var sw SlidingWindows
-	sw.windows = list.New()
-	sw.maxOpenWindows = 2
+	sw.windows = NewRing((MAX_LAG % GRANULARITY) + 2)
+	sw.writer = // make a writer that produces to topic-A, using the least-bytes distribution
+		kafka.NewWriter(kafka.WriterConfig{
+			Brokers:  []string{KAFKA_BROKER},
+			Topic:    KAFKA_TOPIC_OUT,
+			Balancer: &kafka.LeastBytes{},
+		})
 	return &sw
 }
 
@@ -65,23 +80,26 @@ func (sw *SlidingWindows) Add(jd *JsonData) {
 	if jd.Ts > sw.timeAdvance {
 		sw.timeAdvance = jd.Ts
 		// potentially create a new window
-		if sw.windows.Front() == nil || sw.windows.Front().Value.(*Window).Ts < key {
-			sw.windows.PushFront(NewWindow(key))
+		if sw.windows.Size() == 0 || sw.windows.Get(0).Ts < key {
+			sw.windows.Add(key)
 		}
 		// potentially cleanup windows
 		sw.Cleanup()
 	}
 
-	for e := sw.windows.Front(); ; e = e.Next() {
-		if e == nil {
-			// end of the opened windows ... the data is too far in the past
-			log.Printf("Dropped frame: user=%s, ts=%d, time=%d\n", jd.UserId, jd.Ts, sw.timeAdvance)
-			return
-		}
-		if e.Value.(*Window).Ts == key {
-			e.Value.(*Window).Add(jd)
+	added := false
+	for i := 0; i < sw.windows.Size(); i++ {
+		w := sw.windows.Get(i)
+		if w.Ts == key {
+			w.Add(jd)
+			added = true
 			break
 		}
+	}
+
+	if !added {
+		// end of the opened windows ... the data is too far in the past
+		log.Printf("Dropped frame: user=%s, ts=%d, time=%d\n", jd.UserId, jd.Ts, sw.timeAdvance)
 	}
 }
 
@@ -94,15 +112,16 @@ func (sw *SlidingWindows) Cleanup() {
 	sw.lastCleanup = sw.timeAdvance
 	//log.Printf("Trying cleanup\n")
 
-	var prev *list.Element
-	for e := sw.windows.Back(); e != nil; e = prev {
-		w := e.Value.(*Window)
-		prev = e.Prev()
-		if w.Ts < sw.timeAdvance-GRANULARITY-MAX_LAG {
-			log.Printf("Closing window %d (cnt: %d, lag: %d)\n", w.Ts, len(w.m), sw.timeAdvance-w.Ts)
-			go w.Close()
-			sw.windows.Remove(e)
+	for ; sw.windows.Size() > 0; {
+		w := sw.windows.Get(-1) // get oldest
+		if w.Ts >= sw.timeAdvance-GRANULARITY-MAX_LAG {
+			break // the oldest may still be in use, stop
 		}
+
+		log.Printf("Closing window %d (cnt: %d, lag: %d)\n", w.Ts, len(w.m), sw.timeAdvance-w.Ts)
+		go w.Close(sw.writer) // risky !! but we assume closing takes less time than filling buffers...
+		sw.windows.Remove(1)
+
 	}
 }
 
@@ -163,16 +182,17 @@ func main() {
 	// make a new reader that consumes from topic-A, partition 0, at offset 42
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{KAFKA_BROKER},
-		Topic:     KAFKA_TOPIC,
+		Topic:     KAFKA_TOPIC_IN,
 		Partition: 0,
 		MinBytes:  10e3, // 10KB
 		MaxBytes:  10e6, // 10MB
 	})
+	defer r.Close()
 
 	channel := make(chan []byte)
 	timeout := (GRANULARITY + MAX_LAG) * time.Second
-
-	go dispatcher(channel, 3)
+	defer close(channel)
+	go dispatcher(channel, N_WORKERS)
 
 	start := time.Now()
 	log.Println("Start")
@@ -191,9 +211,6 @@ func main() {
 
 	elapsed := time.Now().Sub(start)
 	log.Printf("Elapsed: %s", elapsed)
-	log.Printf("Elapsed-timeout: %sf\n", elapsed.Seconds()-timeout.Seconds())
+	log.Printf("Elapsed-timeout: %fs\n", elapsed.Seconds()-timeout.Seconds())
 
-	// cleanup
-	close(channel)
-	r.Close()
 }
