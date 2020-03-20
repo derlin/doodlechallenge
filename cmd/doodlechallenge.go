@@ -1,9 +1,11 @@
 package main
 
 import (
+	"container/list"
 	"context"
 	"encoding/json"
 	_ "encoding/json"
+	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
 	"time"
@@ -21,53 +23,66 @@ type JsonData struct {
 	UserId string `json:"uid"`
 }
 
-type Window map[string]int
-
-func NewWindow() Window {
-	return make(Window)
+type Window struct {
+	Ts int
+	m  map[string]int
 }
 
-func (w Window) Add(jd *JsonData) {
-	if _, ok := w[jd.UserId]; !ok {
-		w[jd.UserId] = 0
+func NewWindow(ts int) *Window {
+	return &Window{Ts: ts, m: make(map[string]int)}
+}
+
+func (w *Window) Add(jd *JsonData) {
+	if _, ok := w.m[jd.UserId]; !ok {
+		w.m[jd.UserId] = 0
 	}
-	w[jd.UserId] += 1
+	w.m[jd.UserId] += 1
 }
 
-func (w Window) Close(ts int) {
-	//for user, cnt := range w {
-	//	fmt.Printf("@@ CLOSE %d\t%s\t%d\n", ts, user, cnt)
-	//}
+func (w *Window) Close() {
+	for user, cnt := range w.m {
+		_ = fmt.Sprintf("@@ CLOSE %d\t%s\t%d\n", w.Ts, user, cnt)
+	}
 }
 
 type SlidingWindows struct {
-	timeAdvance int
-	lastCleanup int
-	windows     map[int]Window
+	timeAdvance    int
+	lastCleanup    int
+	windows        *list.List
+	maxOpenWindows int
 }
 
 func NewSlidingWindows() *SlidingWindows {
 	var sw SlidingWindows
-	sw.windows = make(map[int]Window)
+	sw.windows = list.New()
+	sw.maxOpenWindows = 2
 	return &sw
 }
 
 func (sw *SlidingWindows) Add(jd *JsonData) {
-	//fmt.Print(".")
+
 	key := jd.Ts - (jd.Ts % GRANULARITY)
-	// add user
-	if _, ok := sw.windows[key]; !ok {
-		sw.windows[key] = NewWindow()
+
+	if sw.timeAdvance == 0 || jd.Ts > sw.timeAdvance {
+		sw.timeAdvance = jd.Ts
+		// potentially create a new window
+		if sw.windows.Front() == nil || sw.windows.Front().Value.(*Window).Ts < key {
+			sw.windows.PushFront(NewWindow(key))
+			// potentially remove old windows
+			sw.cleanup()
+		}
 	}
-	sw.windows[key].Add(jd)
-	// update stats
-	if sw.timeAdvance == 0 {
-		// first value ever !
-		sw.timeAdvance = jd.Ts
-		sw.lastCleanup = jd.Ts
-	} else if jd.Ts > sw.timeAdvance {
-		sw.timeAdvance = jd.Ts
-		sw.cleanup()
+
+	for e := sw.windows.Front(); ; e = e.Next() {
+		if e == nil {
+			// end of the opened windows ... the data is too far in the past
+			log.Printf("Dropped frame: user=%s, ts=%d, time=%d\n", jd.UserId, jd.Ts, sw.timeAdvance)
+			return
+		}
+		if e.Value.(*Window).Ts == key {
+			e.Value.(*Window).Add(jd)
+			break
+		}
 	}
 }
 
@@ -77,15 +92,17 @@ func (sw *SlidingWindows) Advance() {
 }
 
 func (sw *SlidingWindows) cleanup() {
-	if sw.timeAdvance-sw.lastCleanup >= GRANULARITY+MAX_LAG {
-		sw.lastCleanup = sw.timeAdvance
-		log.Printf("Trying cleanup\n")
-		for key, w := range sw.windows {
-			if key < sw.timeAdvance+GRANULARITY+MAX_LAG {
-				log.Printf("Closing window %d (cnt: %d, lag: %d)\n", key, len(w), sw.timeAdvance-key)
-				go w.Close(key)
-				delete(sw.windows, key)
-			}
+	sw.lastCleanup = sw.timeAdvance
+	log.Printf("Trying cleanup\n")
+
+	var prev *list.Element
+	for e := sw.windows.Back(); e != nil; e = prev {
+		w := e.Value.(*Window)
+		prev = e.Prev()
+		if w.Ts < sw.timeAdvance-GRANULARITY-MAX_LAG {
+			log.Printf("Closing window %d (cnt: %d, lag: %d)\n", w.Ts, len(w.m), sw.timeAdvance-w.Ts)
+			go w.Close()
+			sw.windows.Remove(e)
 		}
 	}
 }
@@ -108,12 +125,15 @@ func main() {
 		m, err := r.ReadMessage(ctx)
 		if err != nil {
 			sw.Advance()
+			continue
 		}
+
 		if err := json.Unmarshal(m.Value, &jsonData); err != nil {
 			log.Println(err)
 		} else {
 			sw.Add(&jsonData)
 		}
+
 	}
 
 	r.Close()
