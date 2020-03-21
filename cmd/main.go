@@ -12,25 +12,33 @@ const (
 	KAFKA_BROKER    = "localhost:9092"
 	KAFKA_TOPIC_IN  = "doodle"
 	KAFKA_TOPIC_OUT = "doodle-out"
+	KAFKA_TIMEOUT   = 10
 	MAX_LAG         = 5  // in seconds
 	GRANULARITY     = 60 // in seconds
-	N_WORKERS       = 4
+	N_AGGREGATORS   = 5
+	N_UNMARSHALLERS = 10
 	OUTPUT_TO_KAFKA = true
 )
 
 type JsonData struct {
-	Ts     int32    `json:"ts"`
+	Ts     int32  `json:"ts"`
 	UserId string `json:"uid"`
 }
 
 func dispatcher(channel chan []byte, nWorkers int) {
 
-	workers := make(map[int]chan JsonData)
+	cUnmarshalled := make(chan *JsonData, N_UNMARSHALLERS*4)
+
+	workers := make(map[int]chan JsonData, N_AGGREGATORS*4)
 	// ticker := time.NewTicker(GRANULARITY)
 	ticker := make(chan bool)
 	uids := make(map[string]int)
 	nextWorker := 0
 
+	// start the unmarshallers
+	for i := 0; i < N_UNMARSHALLERS; i++ {
+		go unmarshaller(channel, cUnmarshalled)
+	}
 	// start the workers
 	for i := 0; i < nWorkers; i++ {
 		c := make(chan JsonData)
@@ -38,26 +46,35 @@ func dispatcher(channel chan []byte, nWorkers int) {
 		workers[i] = c
 	}
 
-	var jd JsonData
-
 	for {
-		bs := <-channel
-		if bs == nil {
+		jd := <-cUnmarshalled
+		if jd == nil {
 			// timeout
-			ticker <- true
+			for i := 0; i < N_AGGREGATORS; i++ {
+				ticker <- true
+			}
 			continue
 		}
 
-		// TODO: parallelize the unmarshal
-		if err := json.Unmarshal(bs, &jd); err == nil {
-			key := jd.UserId
-			if _, ok := uids[key]; !ok {
-				uids[jd.UserId] = nextWorker
-				nextWorker = (nextWorker + 1) % nWorkers
-			}
-			workers[uids[key]] <- jd
+		key := jd.UserId
+		if _, ok := uids[key]; !ok {
+			uids[jd.UserId] = nextWorker
+			nextWorker = (nextWorker + 1) % nWorkers
 		}
+		workers[uids[key]] <- *jd
 
+	}
+}
+func unmarshaller(cIn chan []byte, cOut chan *JsonData) {
+
+	for {
+		var jd JsonData
+		bs := <-cIn
+		if bs == nil {
+			cOut <- nil
+		} else if err := json.Unmarshal(bs, &jd); err == nil {
+			cOut <- &jd
+		}
 	}
 }
 
@@ -78,6 +95,18 @@ func aggregator(indata chan JsonData, flush chan bool) {
 }
 
 func main() {
+	//log.SetOutput(os.Stdout)
+	//trace.Start(os.Stderr)
+	//defer trace.Stop()
+	//f, err := os.Create("cpuprofile-kafka")
+	//if err != nil {
+	//	log.Fatal("could not create CPU profile: ", err)
+	//}
+	//defer f.Close()
+	//if err := pprof.StartCPUProfile(f); err != nil {
+	//	log.Fatal("could not start CPU profile: ", err)
+	//}
+	//defer pprof.StopCPUProfile()
 	// make a new reader that consumes from topic-A, partition 0, at offset 42
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{KAFKA_BROKER},
@@ -88,16 +117,15 @@ func main() {
 	})
 	defer r.Close()
 
-	channel := make(chan []byte)
-	timeout := (GRANULARITY + MAX_LAG) * time.Second
+	channel := make(chan []byte, 10) // add some buffering
 	defer close(channel)
-	go dispatcher(channel, N_WORKERS)
+	go dispatcher(channel, N_AGGREGATORS)
 
 	start := time.Now()
 	log.Println("Start")
 
 	for {
-		ctx, _ := context.WithTimeout(context.Background(), timeout)
+		ctx, _ := context.WithTimeout(context.Background(), KAFKA_TIMEOUT*time.Second)
 		m, err := r.ReadMessage(ctx)
 		if err != nil {
 			// TODO not very clean...
@@ -110,6 +138,6 @@ func main() {
 
 	elapsed := time.Now().Sub(start)
 	log.Printf("Elapsed: %s", elapsed)
-	log.Printf("Elapsed-timeout: %fs\n", elapsed.Seconds()-timeout.Seconds())
+	log.Printf("Elapsed-timeout: %fs\n", elapsed.Seconds()-KAFKA_TIMEOUT)
 
 }

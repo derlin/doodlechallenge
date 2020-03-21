@@ -107,7 +107,7 @@ func (sw *AggregatorState) flushAggregation(w Aggregation) {
 	} else {
 		// just output to std
 		for user, cnt := range w.m {
-			fmt.Printf("%d\t%s\t%d\n", w.TimeKey, user, cnt)
+			_ = fmt.Sprintf("%d\t%s\t%d\n", w.TimeKey, user, cnt)
 		}
 	}
 }
