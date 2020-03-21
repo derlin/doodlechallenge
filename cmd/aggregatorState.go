@@ -94,20 +94,15 @@ func (sw *AggregatorState) Cleanup() {
 
 func (sw *AggregatorState) flushAggregation(w Aggregation) {
 	if sw.writer != nil {
-		msg := make([]kafka.Message, len(w.m))
-		i := 0
-		for user, cnt := range w.m {
-			msg[i].Key = []byte(user)
-			msg[i].Value = []byte(fmt.Sprintf(`{"ts": %d, "user":"%s", "cnt": %d}`, w.TimeKey, user, cnt))
-			i += 1
-		}
-		if err := sw.writer.WriteMessages(context.Background(), msg...); err != nil {
+		err := sw.writer.WriteMessages(context.Background(), kafka.Message{
+			Key:   []byte(fmt.Sprintf("%f", w.TimeKey)),
+			Value: []byte(fmt.Sprintf(`{"ts": %d, "cnt": %d}`, w.TimeKey, w.Count())),
+		})
+		if err != nil {
 			log.Panic(err)
 		}
 	} else {
 		// just output to std
-		for user, cnt := range w.m {
-			_ = fmt.Sprintf("%d\t%s\t%d\n", w.TimeKey, user, cnt)
-		}
+		fmt.Printf("%d\t%s\t%d\n", w.TimeKey, w.Count())
 	}
 }

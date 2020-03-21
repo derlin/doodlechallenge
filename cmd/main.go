@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"github.com/segmentio/kafka-go"
 	"log"
+	"os"
+	"runtime/pprof"
 	"time"
 )
 
@@ -12,12 +14,13 @@ const (
 	KAFKA_BROKER    = "localhost:9092"
 	KAFKA_TOPIC_IN  = "doodle"
 	KAFKA_TOPIC_OUT = "doodle-out"
-	KAFKA_TIMEOUT   = 10
-	MAX_LAG         = 5  // in seconds
-	GRANULARITY     = 60 // in seconds
-	N_AGGREGATORS   = 5
-	N_UNMARSHALLERS = 10
-	OUTPUT_TO_KAFKA = true
+	KAFKA_TIMEOUT   = 10 // reading timeout: stops the program if reached
+
+	GRANULARITY = 60 // in seconds
+	MAX_LAG     = 5  // in seconds
+
+	N_UNMARSHALLERS = 20   // number of unmarshal goroutines
+	OUTPUT_TO_KAFKA = true // if false, just print to stdout
 )
 
 type JsonData struct {
@@ -25,60 +28,22 @@ type JsonData struct {
 	UserId string `json:"uid"`
 }
 
-func dispatcher(channel chan []byte, nWorkers int) {
-
-	cUnmarshalled := make(chan *JsonData, N_UNMARSHALLERS*4)
-
-	workers := make(map[int]chan JsonData, N_AGGREGATORS*4)
-	// ticker := time.NewTicker(GRANULARITY)
-	ticker := make(chan bool)
-	uids := make(map[string]int)
-	nextWorker := 0
-
-	// start the unmarshallers
-	for i := 0; i < N_UNMARSHALLERS; i++ {
-		go unmarshaller(channel, cUnmarshalled)
-	}
-	// start the workers
-	for i := 0; i < nWorkers; i++ {
-		c := make(chan JsonData)
-		go aggregator(c, ticker)
-		workers[i] = c
-	}
-
-	for {
-		jd := <-cUnmarshalled
-		if jd == nil {
-			// timeout
-			for i := 0; i < N_AGGREGATORS; i++ {
-				ticker <- true
-			}
-			continue
-		}
-
-		key := jd.UserId
-		if _, ok := uids[key]; !ok {
-			uids[jd.UserId] = nextWorker
-			nextWorker = (nextWorker + 1) % nWorkers
-		}
-		workers[uids[key]] <- *jd
-
-	}
+func (jd *JsonData) IsValid() bool {
+	return jd.UserId != "" && jd.Ts > 0
 }
-func unmarshaller(cIn chan []byte, cOut chan *JsonData) {
 
+func unmarshaller(cIn chan []byte, cOut chan JsonData) {
+
+	var jd JsonData
 	for {
-		var jd JsonData
 		bs := <-cIn
-		if bs == nil {
-			cOut <- nil
-		} else if err := json.Unmarshal(bs, &jd); err == nil {
-			cOut <- &jd
+		if err := json.Unmarshal(bs, &jd); err == nil && jd.IsValid() {
+			cOut <- jd
 		}
 	}
 }
 
-func aggregator(indata chan JsonData, flush chan bool) {
+func aggregator(cIn chan JsonData, flush chan bool) {
 	sw := NewAggregatorState(!OUTPUT_TO_KAFKA)
 
 	for {
@@ -88,7 +53,7 @@ func aggregator(indata chan JsonData, flush chan bool) {
 				break
 			}
 			sw.Advance()
-		case jd := <-indata:
+		case jd := <-cIn:
 			sw.Add(&jd)
 		}
 	}
@@ -98,15 +63,16 @@ func main() {
 	//log.SetOutput(os.Stdout)
 	//trace.Start(os.Stderr)
 	//defer trace.Stop()
-	//f, err := os.Create("cpuprofile-kafka")
-	//if err != nil {
-	//	log.Fatal("could not create CPU profile: ", err)
-	//}
-	//defer f.Close()
-	//if err := pprof.StartCPUProfile(f); err != nil {
-	//	log.Fatal("could not start CPU profile: ", err)
-	//}
-	//defer pprof.StopCPUProfile()
+	f, err := os.Create("cpuprofile-new")
+	if err != nil {
+		log.Fatal("could not create CPU profile: ", err)
+	}
+	defer f.Close()
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Fatal("could not start CPU profile: ", err)
+	}
+	defer pprof.StopCPUProfile()
+
 	// make a new reader that consumes from topic-A, partition 0, at offset 42
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{KAFKA_BROKER},
@@ -117,10 +83,21 @@ func main() {
 	})
 	defer r.Close()
 
-	channel := make(chan []byte, 10) // add some buffering
-	defer close(channel)
-	go dispatcher(channel, N_AGGREGATORS)
+	// create the channels
 
+	cMessages := make(chan []byte, N_UNMARSHALLERS)         // raw messages from kafka, with some buffering
+	cUnmarshalled := make(chan JsonData, N_UNMARSHALLERS*2) // unmarshalled messages
+	cTimeout := make(chan bool)                             // to tell the aggregator to flush the remaining windows
+
+	// start the unmarshallers
+	for i := 0; i < N_UNMARSHALLERS; i++ {
+		go unmarshaller(cMessages, cUnmarshalled)
+	}
+
+	// start the aggregator
+	go aggregator(cUnmarshalled, cTimeout)
+
+	// GO !
 	start := time.Now()
 	log.Println("Start")
 
@@ -129,10 +106,12 @@ func main() {
 		m, err := r.ReadMessage(ctx)
 		if err != nil {
 			// TODO not very clean...
-			channel <- nil
+			cTimeout <- false
 			break
 		} else {
-			channel <- m.Value
+			if len(m.Value) > 1 { // ensure we have some bytes
+				cMessages <- m.Value
+			}
 		}
 	}
 

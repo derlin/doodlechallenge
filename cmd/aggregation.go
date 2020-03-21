@@ -20,6 +20,10 @@ func (w *Aggregation) Increment(user string) {
 	w.m[user] += 1
 }
 
+func (w *Aggregation) Count() int {
+	return len(w.m)
+}
+
 //func (w *Aggregation) Close(writer *kafka.Writer) {
 //	msg := make([]kafka.Message, len(w.m))
 //	i := 0
