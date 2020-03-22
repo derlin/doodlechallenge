@@ -1,0 +1,61 @@
+
+
+Run 1
+======
+
+Elapsed: 80.47956944
+./doodlechallenge  16.14s user 8.80s system 29% cpu 1:24.59 total
+
+Run 2
+======
+
+Elapsed: 91.105972658
+./doodlechallenge  18.17s user 9.90s system 29% cpu 1:35.22 total
+
+Run 3
+======
+
+Elapsed: 105.942985734
+./doodlechallenge  21.06s user 11.68s system 29% cpu 1:50.05 total
+
+Run 4
+======
+
+Elapsed: 106.025863816
+./doodlechallenge  19.99s user 10.89s system 29% cpu 1:45.14 total
+
+Run 5
+======
+
+Elapsed: 105.9081484
+./doodlechallenge  20.32s user 11.16s system 29% cpu 1:45.02 total
+
+Run 6
+======
+
+Elapsed: 106.280748168
+./doodlechallenge  20.31s user 11.10s system 29% cpu 1:45.39 total
+
+Run 7
+======
+
+Elapsed: 117.868016606
+./doodlechallenge  21.87s user 12.30s system 29% cpu 1:56.98 total
+
+Run 8
+======
+
+Elapsed: 109.742214175
+./doodlechallenge  20.89s user 11.67s system 29% cpu 1:48.85 total
+
+Run 9
+======
+
+Elapsed: 111.40826236
+./doodlechallenge  21.07s user 11.73s system 29% cpu 1:50.52 total
+
+Run 10
+======
+
+Elapsed: 111.285222388
+./doodlechallenge  20.85s user 11.73s system 29% cpu 1:50.40 total

@@ -1,0 +1,241 @@
+
+
+Run 1
+======
+
+2020/03/21 20:44:27 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 20:44:29 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 20:44:34 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 20:44:41 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 20:44:48 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 20:44:55 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 20:45:00 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 20:45:08 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 20:45:14 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 20:45:22 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 20:45:28 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 20:45:35 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 20:45:42 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 20:45:49 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 20:45:56 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 20:46:03 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 20:46:11 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 20:46:28 Elapsed: 121.102939
+2020/03/21 20:46:28 Elapsed-timeout: 111.102939s
+./doodlechallenge  75.29s user 23.34s system 76% cpu 2:09.21 total
+
+Run 2
+======
+
+2020/03/21 20:47:07 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 20:47:08 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 20:47:13 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 20:47:20 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 20:47:28 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 20:47:35 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 20:47:41 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 20:47:48 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 20:47:54 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 20:48:02 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 20:48:09 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 20:48:15 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 20:48:22 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 20:48:29 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 20:48:36 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 20:48:44 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 20:48:52 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 20:49:09 Elapsed: 122.358972
+2020/03/21 20:49:09 Elapsed-timeout: 112.358972s
+./doodlechallenge  77.94s user 24.39s system 78% cpu 2:10.47 total
+
+Run 3
+======
+
+2020/03/21 20:49:47 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 20:49:49 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 20:49:53 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 20:50:01 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 20:50:08 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 20:50:15 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 20:50:21 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 20:50:28 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 20:50:35 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 20:50:42 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 20:50:49 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 20:50:56 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 20:51:03 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 20:51:10 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 20:51:17 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 20:51:24 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 20:51:32 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 20:51:49 Elapsed: 122.106558
+2020/03/21 20:51:49 Elapsed-timeout: 112.106558s
+./doodlechallenge  75.80s user 22.75s system 75% cpu 2:10.22 total
+
+Run 4
+======
+
+2020/03/21 20:52:27 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 20:52:29 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 20:52:33 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 20:52:40 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 20:52:47 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 20:52:54 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 20:53:00 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 20:53:07 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 20:53:14 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 20:53:21 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 20:53:28 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 20:53:35 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 20:53:42 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 20:53:49 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 20:53:56 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 20:54:03 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 20:54:11 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 20:54:28 Elapsed: 120.731194
+2020/03/21 20:54:28 Elapsed-timeout: 110.731194s
+./doodlechallenge  75.35s user 22.80s system 76% cpu 2:08.84 total
+
+Run 5
+======
+
+2020/03/21 20:55:06 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 20:55:08 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 20:55:12 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 20:55:19 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 20:55:27 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 20:55:34 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 20:55:39 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 20:55:46 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 20:55:52 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 20:56:00 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 20:56:06 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 20:56:13 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 20:56:20 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 20:56:27 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 20:56:34 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 20:56:41 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 20:56:49 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 20:57:06 Elapsed: 119.782281
+2020/03/21 20:57:06 Elapsed-timeout: 109.782281s
+./doodlechallenge  74.50s user 22.52s system 75% cpu 2:07.89 total
+
+Run 6
+======
+
+2020/03/21 20:57:44 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 20:57:46 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 20:57:51 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 20:57:57 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 20:58:06 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 20:58:13 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 20:58:18 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 20:58:25 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 20:58:31 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 20:58:39 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 20:58:45 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 20:58:52 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 20:58:59 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 20:59:06 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 20:59:13 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 20:59:20 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 20:59:28 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 20:59:45 Elapsed: 120.925772
+2020/03/21 20:59:45 Elapsed-timeout: 110.925772s
+./doodlechallenge  74.33s user 22.43s system 74% cpu 2:09.04 total
+
+Run 7
+======
+
+2020/03/21 21:00:23 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 21:00:25 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 21:00:29 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 21:00:36 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 21:00:44 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 21:00:51 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 21:00:57 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 21:01:04 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 21:01:10 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 21:01:18 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 21:01:24 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 21:01:31 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 21:01:38 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 21:01:45 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 21:01:51 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 21:01:58 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 21:02:06 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 21:02:23 Elapsed: 119.464184
+2020/03/21 21:02:23 Elapsed-timeout: 109.464184s
+./doodlechallenge  75.27s user 23.38s system 77% cpu 2:07.57 total
+
+Run 8
+======
+
+2020/03/21 21:03:01 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 21:03:02 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 21:03:07 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 21:03:14 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 21:03:22 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 21:03:28 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 21:03:34 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 21:03:41 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 21:03:48 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 21:03:55 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 21:04:01 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 21:04:08 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 21:04:15 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 21:04:22 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 21:04:29 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 21:04:36 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 21:04:45 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 21:05:02 Elapsed: 121.116468
+2020/03/21 21:05:02 Elapsed-timeout: 111.116468s
+./doodlechallenge  74.24s user 22.94s system 75% cpu 2:09.23 total
+
+Run 9
+======
+
+2020/03/21 21:05:40 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 21:05:42 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 21:05:46 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 21:05:53 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 21:06:01 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 21:06:08 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 21:06:14 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 21:06:21 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 21:06:28 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 21:06:35 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 21:06:42 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 21:06:48 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 21:06:56 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 21:07:03 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 21:07:11 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 21:07:17 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 21:07:25 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 21:07:41 Elapsed: 121.396364
+2020/03/21 21:07:41 Elapsed-timeout: 111.396364s
+./doodlechallenge  74.52s user 22.20s system 74% cpu 2:09.51 total
+
+Run 10
+======
+
+2020/03/21 21:08:20 Start: unmarshallers=5, max_lag=5, kafka_timeout=10, output_to_kafka=true
+2020/03/21 21:08:21 Closing window 1468244340 (cnt: 16193, lag: 66)
+2020/03/21 21:08:25 Closing window 1468244400 (cnt: 41130, lag: 66)
+2020/03/21 21:08:32 Closing window 1468244460 (cnt: 47369, lag: 66)
+2020/03/21 21:08:39 Closing window 1468244520 (cnt: 49488, lag: 66)
+2020/03/21 21:08:46 Closing window 1468244580 (cnt: 47863, lag: 66)
+2020/03/21 21:08:51 Closing window 1468244640 (cnt: 40439, lag: 66)
+2020/03/21 21:08:58 Closing window 1468244700 (cnt: 42859, lag: 66)
+2020/03/21 21:09:04 Closing window 1468244760 (cnt: 47312, lag: 66)
+2020/03/21 21:09:11 Closing window 1468244820 (cnt: 48180, lag: 66)
+2020/03/21 21:09:17 Closing window 1468244880 (cnt: 47981, lag: 66)
+2020/03/21 21:09:24 Closing window 1468244940 (cnt: 42194, lag: 66)
+2020/03/21 21:09:30 Closing window 1468245000 (cnt: 45070, lag: 66)
+2020/03/21 21:09:37 Closing window 1468245060 (cnt: 43659, lag: 66)
+2020/03/21 21:09:44 Closing window 1468245120 (cnt: 48611, lag: 66)
+2020/03/21 21:09:50 Closing window 1468245180 (cnt: 42742, lag: 66)
+2020/03/21 21:09:59 Closing window 1468245240 (cnt: 51930, lag: 66)
+2020/03/21 21:10:16 Elapsed: 116.799515
+2020/03/21 21:10:16 Elapsed-timeout: 106.799515s
+./doodlechallenge  75.48s user 23.64s system 79% cpu 2:04.92 total

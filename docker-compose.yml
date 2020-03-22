@@ -15,7 +15,7 @@ services:
       - '9092:9092'
     volumes:
       - 'kafka_data:/bitnami'
-      - './xx:/xx'
+      - './data:/data'
     environment:
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092

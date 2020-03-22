@@ -1,33 +1,23 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"github.com/segmentio/kafka-go"
 	"log"
 	"time"
 )
 
 // State and variables needed for one aggregator to do its job
 type AggregatorState struct {
-	timeAdvance int32         // latest timestamp consumed so far, or time of the latest read timeout
-	windows     *Ring         // a circular buffer for storing opened aggregation windows
-	writer      *kafka.Writer // kafka writer to output the results on window close
+	timeAdvance int32            // latest timestamp consumed so far, or time of the latest read timeout
+	windows     *Ring            // a circular buffer for storing opened aggregation windows
+	emitter     chan Aggregation // where to send closed Windows
 }
 
 // Create a new aggregator state, this will also initialize a new Kafka writer.
 // If 'toStd' is true, the aggregations will be printed to stdout instead of pushed to a kafka topic
-func NewAggregatorState(toStd bool) *AggregatorState {
+func NewAggregatorState(emitter chan Aggregation) *AggregatorState {
 	var sw AggregatorState
 	sw.windows = NewRing((MAX_LAG % GRANULARITY) + 2) // make 1 time bigger than strictly needed
-	if !toStd {
-		sw.writer = // make a writer that produces to topic, using the least-bytes distribution
-			kafka.NewWriter(kafka.WriterConfig{
-				Brokers:  []string{KAFKA_BROKER}, // TODO not very clean
-				Topic:    KAFKA_TOPIC_OUT,
-				Balancer: &kafka.LeastBytes{},
-			})
-	}
+	sw.emitter = emitter
 	return &sw
 }
 
@@ -84,25 +74,8 @@ func (sw *AggregatorState) Cleanup() {
 		}
 
 		log.Printf("Closing window %d (cnt: %d, lag: %d)\n", w.TimeKey, len(w.m), sw.timeAdvance-w.TimeKey)
-		go sw.flushAggregation(*w) // passed by copy to avoid the window to be changed before flush ends
+		sw.emitter <- *w // passed by copy to avoid the window to be changed before flush ends
 		sw.windows.Remove(1)
 
-	}
-}
-
-// private function
-
-func (sw *AggregatorState) flushAggregation(w Aggregation) {
-	if sw.writer != nil {
-		err := sw.writer.WriteMessages(context.Background(), kafka.Message{
-			Key:   []byte(fmt.Sprintf("%f", w.TimeKey)),
-			Value: []byte(fmt.Sprintf(`{"ts": %d, "cnt": %d}`, w.TimeKey, w.Count())),
-		})
-		if err != nil {
-			log.Panic(err)
-		}
-	} else {
-		// just output to std
-		fmt.Printf("%d\t%s\t%d\n", w.TimeKey, w.Count())
 	}
 }

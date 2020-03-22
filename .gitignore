@@ -1,0 +1,12 @@
+# ide
+.idea
+.vscode
+
+# out
+doodlechallenge
+*.out
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
