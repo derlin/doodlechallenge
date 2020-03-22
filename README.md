@@ -3,6 +3,8 @@
 This repository contains the code and the report for the Doodle Hiring Challenge described here: 
 https://github.com/tamediadigital/hiring-challenges/tree/master/data-engineer-challenge 
 
+**⇨ see [report.md](report.md) for details ⇦**
+
 ## Structure
 
 Folders:
