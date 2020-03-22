@@ -1,4 +1,4 @@
-# Doodle Hiring Challenge - derlin
+# Doodle Data Engineering Hiring Challenge - derlin
 
 This repository contains the code and the report for the Doodle Hiring Challenge described here: 
 https://github.com/tamediadigital/hiring-challenges/tree/master/data-engineer-challenge 
@@ -27,6 +27,7 @@ Files:
 ## Install and run
 
 1. clone this repo
+2. install dependencies: `go get github.com/segmentio/kafka-go` or `go get cmd/..`
 2. build and run using `go run cmd/*.go`, or build *then* run using `go build -o doodlechallenge cmd/*.go && ./doodlechallenge`
 
 ## Using docker for Kafka
@@ -72,7 +73,7 @@ Setup the topics and the data (still inside the kafka container):
 
 cat /data/stream.jsonl | /opt/bitnami/kafka/bin/kafka-console-producer.sh --broker-list kafka:9092 --topic doodle
 ```
-Note that the last command may take a while, there are 10K records to ingest !
+Note that the last command may take a while, there are 1M records to ingest !
 
 
 ----------------------------------
